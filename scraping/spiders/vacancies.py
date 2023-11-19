@@ -1,4 +1,3 @@
-import re
 from datetime import datetime
 from typing import Optional, Generator
 
@@ -12,8 +11,12 @@ class VacanciesSpider(scrapy.Spider):
     allowed_domains = ["djinni.co"]
     start_urls = ["https://djinni.co/jobs/?primary_keyword=Python"]
 
-    def parse(self, response: Response, **kwargs: Optional[dict]) -> Generator[scrapy.Request, None, None]:
-        vacancy_links = response.css(".job-list-item__link::attr(href)").extract()
+    def parse(
+        self, response: Response, **kwargs: Optional[dict]
+    ) -> Generator[scrapy.Request, None, None]:
+        vacancy_links = response.css(
+            ".job-list-item__link::attr(href)"
+        ).extract()
         for vacancy_link in vacancy_links:
             yield Request(
                 response.urljoin(vacancy_link), callback=self.parse_vacancy
@@ -50,27 +53,37 @@ class VacanciesSpider(scrapy.Spider):
             "test_available": test_available,
             "views": views,
             "applications": applications,
-            'publication_date': publication_date,
+            "publication_date": publication_date,
         }
 
     @staticmethod
     def get_company(response: Response) -> Optional[str]:
-        return response.css(".job-details--title::text").get().strip() if response.css(
-            ".job-details--title::text") else None
+        return (
+            response.css(".job-details--title::text").get().strip()
+            if response.css(".job-details--title::text")
+            else None
+        )
 
     @staticmethod
     def get_salary(response: Response) -> Optional[str]:
-        return response.css(".public-salary-item::text").get().strip() if response.css(
-            ".public-salary-item::text") else None
+        return (
+            response.css(".public-salary-item::text").get().strip()
+            if response.css(".public-salary-item::text")
+            else None
+        )
 
     @staticmethod
     def get_english_level(sel: Selector) -> Optional[str]:
-        english_level = sel.xpath('//div[contains(text(), "Англійська:")]/text()').get()
+        english_level = sel.xpath(
+            '//div[contains(text(), "Англійська:")]/text()'
+        ).get()
         return english_level.strip().split(": ")[1] if english_level else None
 
     @staticmethod
     def get_experience_year(response: Response) -> Optional[int]:
-        exp_text = response.css(".job-additional-info--body li:last-child div::text").get()
+        exp_text = response.css(
+            ".job-additional-info--body li:last-child div::text"
+        ).get()
         if exp_text:
             experience_year = int(exp_text.split()[0].replace("Без", "0"))
             return experience_year
@@ -84,18 +97,21 @@ class VacanciesSpider(scrapy.Spider):
     @staticmethod
     def get_additional_info(sel: Selector) -> tuple:
         work_type, company_type, test_available = None, None, None
-        items = sel.css('li.job-additional-info--item')
+        items = sel.css("li.job-additional-info--item")
         for item in items:
-            icon_class = item.css('span::attr(class)').get()
-            text = item.css('div.job-additional-info--item-text::text').get()
+            icon_class = item.css("span::attr(class)").get()
+            text = item.css("div.job-additional-info--item-text::text").get()
 
-            if 'bi bi-building' in icon_class:
+            if "bi bi-building" in icon_class:
                 work_type = text.strip() if text else None
-            elif 'bi bi-basket3-fill' in icon_class:
+            elif "bi bi-basket3-fill" in icon_class:
                 company_type = text.strip() if text else None
-            elif 'bi bi-exclude' in icon_class:
+            elif "bi bi-exclude" in icon_class:
                 company_type = text.strip() if text else None
-            elif 'bi bi-pencil-square' in icon_class and text == 'Є тестове завдання':
+            elif (
+                "bi bi-pencil-square" in icon_class
+                and text == "Є тестове завдання"
+            ):
                 test_available = 1
 
         return work_type, company_type, test_available
@@ -112,16 +128,29 @@ class VacanciesSpider(scrapy.Spider):
 
     def get_publication_date(self, response: Response) -> str:
         date_text = response.css("p.text-muted").extract_first()
-        publication_date = date_text.split('Вакансія опублікована')[-1].strip().split("<br>")[0].strip()
+        publication_date = (
+            date_text.split("Вакансія опублікована")[-1]
+            .strip()
+            .split("<br>")[0]
+            .strip()
+        )
         return self.format_data(publication_date)
 
     @staticmethod
     def format_data(publication_date: str):
         months_dict = {
-            'січня': 'January', 'лютого': 'February', 'березня': 'March', 'квітня': 'April', 'травня': 'May',
-            'червня': 'June',
-            'липня': 'July', 'серпня': 'August', 'вересня': 'September', 'жовтня': 'October', 'листопада': 'November',
-            'грудня': 'December'
+            "січня": "January",
+            "лютого": "February",
+            "березня": "March",
+            "квітня": "April",
+            "травня": "May",
+            "червня": "June",
+            "липня": "July",
+            "серпня": "August",
+            "вересня": "September",
+            "жовтня": "October",
+            "листопада": "November",
+            "грудня": "December",
         }
         for k, v in months_dict.items():
             publication_date = publication_date.replace(k, v)
