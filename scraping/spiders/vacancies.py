@@ -29,7 +29,7 @@ class VacanciesSpider(scrapy.Spider):
         experience = sel.xpath('//div[contains(text(), "роки досвіду")]/text()').get()
 
         yield {
-            "vacancy": response.css("h1::text").get().strip(),
-            "english_level": english_level.strip().split(":")[1] if english_level else None,
+            "title": response.css("h1::text").get().strip(),
+            "english_level": english_level.strip().split(": ")[1] if english_level else None,
             "experience_year": experience.strip().split()[0] if experience else None,
         }
