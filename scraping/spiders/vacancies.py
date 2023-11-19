@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, Generator
 
+import config
 import scrapy
 from scrapy import Request, Selector
 from scrapy.http import Response
@@ -40,7 +41,7 @@ class VacanciesSpider(scrapy.Spider):
         views = self.get_views(response)
         applications = self.get_applications(response)
         publication_date = self.get_publication_date(response)
-
+        technologies = self.get_technologies(response)
         yield {
             "title": response.css("h1::text").get().strip(),
             "company": company,
@@ -54,7 +55,18 @@ class VacanciesSpider(scrapy.Spider):
             "views": views,
             "applications": applications,
             "publication_date": publication_date,
+            "technologies": technologies,
         }
+
+    @staticmethod
+    def get_technologies(response: Response):
+        description = " ".join(response.css("div.mb-4::text").getall()).strip()
+        technologies_list = config.technologies
+        current_technologies_list = []
+        for technology in technologies_list:
+            if technology.lower() in description.lower():
+                current_technologies_list.append(technology)
+        return current_technologies_list
 
     @staticmethod
     def get_company(response: Response) -> Optional[str]:
