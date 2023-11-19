@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from typing import Optional, Generator
 
 import scrapy
@@ -57,6 +59,9 @@ class VacanciesSpider(scrapy.Spider):
             elif 'bi bi-pencil-square' in icon_class and text == 'Є тестове завдання':
                 test_available = 1
 
+        views = int(response.css("p.text-muted").re_first(r"(\d+) відгук"))
+        applications = int(response.css("p.text-muted").re_first(r"(\d+) відгук"))
+
         yield {
             "title": response.css("h1::text").get().strip(),
             "company": company.strip() if company else None,
@@ -67,4 +72,38 @@ class VacanciesSpider(scrapy.Spider):
             "work_type": work_type,
             "company_type": company_type,
             "test_available": test_available,
+            "views": views,
+            "applications": applications,
+            'publication_date': self.get_publication_date(response),
         }
+
+    def get_publication_date(self, response: Response) -> str:
+        date_text = response.css("p.text-muted").extract_first()
+        publication_date = date_text.split('Вакансія опублікована')[-1].strip()
+        publication_date = publication_date.split("<br>")[0].strip()
+        return self.format_data(publication_date)
+
+    @staticmethod
+    def format_data(publication_date: str):
+        months_dict = {
+            'січня': 'January',
+            'лютого': 'February',
+            'березня': 'March',
+            'квітня': 'April',
+            'травня': 'May',
+            'червня': 'June',
+            'липня': 'July',
+            'серпня': 'August',
+            'вересня': 'September',
+            'жовтня': 'October',
+            'листопада': 'November',
+            'грудня': 'December'
+        }
+        for k, v in months_dict.items():
+            publication_date = publication_date.replace(k, v)
+
+        date_obj = datetime.strptime(publication_date, "%d %B %Y")
+        date_only = date_obj.date()
+        return date_only
+
+
