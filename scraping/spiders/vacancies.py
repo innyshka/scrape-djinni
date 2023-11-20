@@ -1,8 +1,10 @@
-from datetime import datetime
-from typing import Optional, Generator
+import scrapy
 
 import config
-import scrapy
+
+from datetime import datetime, date
+from typing import Optional, Generator
+
 from scrapy import Request, Selector
 from scrapy.http import Response
 
@@ -59,7 +61,7 @@ class VacanciesSpider(scrapy.Spider):
         }
 
     @staticmethod
-    def get_technologies(response: Response):
+    def get_technologies(response: Response) -> list:
         description = " ".join(response.css("div.mb-4::text").getall()).strip()
         technologies_list = config.technologies
         current_technologies_list = []
@@ -138,7 +140,7 @@ class VacanciesSpider(scrapy.Spider):
         apps_text = response.css("p.text-muted").re_first(r"(\d+) відгук")
         return int(apps_text) if apps_text else 0
 
-    def get_publication_date(self, response: Response) -> str:
+    def get_publication_date(self, response: Response) -> date:
         date_text = response.css("p.text-muted").extract_first()
         publication_date = (
             date_text.split("Вакансія опублікована")[-1]
@@ -149,7 +151,7 @@ class VacanciesSpider(scrapy.Spider):
         return self.format_data(publication_date)
 
     @staticmethod
-    def format_data(publication_date: str):
+    def format_data(publication_date: str) -> date:
         months_dict = {
             "січня": "January",
             "лютого": "February",
