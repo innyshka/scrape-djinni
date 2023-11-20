@@ -1,4 +1,4 @@
-# 📊 Analytics Djinni vacancies for Python Developers
+# 📊 Djinni vacancies analysis for Python Developers
 A web scraping and data analysis project that provides Djinni vacancies statistics for Python developers.
 
 ## 👩‍💻 Technologies
